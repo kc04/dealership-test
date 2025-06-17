@@ -65,19 +65,6 @@
 
     <!-- Embedded web app -->
     <iframe id="myIframe" src="https://srishti249.mykaarma.dev/web-scheduler-app/entry?dealerUuid=cb731d36fd635ddd6ef8dd43500892b0c0249d1c01a46dbcc445a809c0a8e3b2"></iframe>
-
-    <script>
-      // Wait until the iframe has loaded
-      const iframe = document.getElementById('myIframe');
-      
-      iframe.addEventListener('load', function() {
-        // Extract the query parameters from the ancestor's URL
-        const queryString = "?utm_source=12345"
-        
-        // Send them to the iframe
-        iframe.contentWindow.postMessage({ query: queryString }, "https://srishti249.mykaarma.dev"); 
-      });
-    </script>
   </div>
 
   <footer>
