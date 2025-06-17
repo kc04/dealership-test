@@ -67,9 +67,7 @@
     <iframe id="myIframe" src="https://srishti249.mykaarma.dev/web-scheduler-app/entry?dealerUuid=cb731d36fd635ddd6ef8dd43500892b0c0249d1c01a46dbcc445a809c0a8e3b2"></iframe>
     <script>
       const iframe = document.getElementById('myIframe');
-      const queryString1 = "?utm_source=1234"
-      console.log(" Posting message to iframe:", queryString1);
-      iframe.contentWindow.postMessage({ query: queryString1 }, "https://srishti249.mykaarma.dev"); 
+      console.log(" Posting message to iframe");
       iframe.addEventListener('load', function() {
         const queryString = "?utm_source=12345"
         iframe.contentWindow.postMessage({ query: queryString }, "https://srishti249.mykaarma.dev"); 
