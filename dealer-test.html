@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Premier Auto Deals</title>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SJZ0738NVZ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+  
+    gtag('config', 'G-SJZ0738NVZ');
+  </script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -66,13 +75,32 @@
     <!-- Embedded web app -->
     <iframe id="myIframe" src="https://srishti249.mykaarma.dev/web-scheduler-app/entry?dealerUuid=cb731d36fd635ddd6ef8dd43500892b0c0249d1c01a46dbcc445a809c0a8e3b2"></iframe>
     <script>
+      const PARENT_GA_MEASUREMENT_ID = 'G-SJZ0738NVZ'; 
       const iframe = document.getElementById('myIframe');
-      console.log(" Posting message to iframe");
-      iframe.addEventListener('load', function() {
-        const queryString = "?utm_source=12345"
-        iframe.contentWindow.postMessage({ query: queryString }, "https://srishti249.mykaarma.dev"); 
-        console.log("Posted message to iframe:", queryString);
-      });
+      const targetOrigin = "https://srishti249.mykaarma.dev";
+
+      const getGaValue = (key) => {
+        return new Promise((resolve) => {
+          gtag('get', PARENT_GA_MEASUREMENT_ID, key, (value) => resolve(value));
+        });
+      };
+
+      async function sendGa4DataToIframe() {
+        try {
+          const [clientId, sessionId] = await Promise.all([
+            getGaValue('client_id'),
+            getGaValue('session_id')
+          ]);
+          const message = { type: 'ga4Data', clientId: clientId, sessionId: sessionId };
+          iframe.contentWindow.postMessage(message, targetOrigin);
+          console.log("🚀 GA4 data synced with iframe:", message);
+        } catch (error) {
+          console.error("Error syncing GA4 data:", error);
+        }
+      }
+
+      iframe.addEventListener('load', sendGa4DataToIframe);
+      setInterval(sendGa4DataToIframe, 600000); 
     </script>
   </div>
 
