@@ -78,72 +78,35 @@
 
     <!-- Embedded web app -->
     <iframe id="myIframe" src="https://srishti249.mykaarma.dev/web-scheduler-app/entry?dealerUuid=cb731d36fd635ddd6ef8dd43500892b0c0249d1c01a46dbcc445a809c0a8e3b2"></iframe>
-    <script>
-    // --- Configuration ---
-    const GA_MEASUREMENT_ID = 'G-SJZ0738NVZ';
-    const DESTINATION_DOMAIN = 'srishti249.mykaarma.dev';
+        <script>
+      const PARENT_GA_MEASUREMENT_ID = 'G-SJZ0738NVZ'; 
+      const iframe = document.getElementById('myIframe');
+      const targetOrigin = "https://srishti249.mykaarma.dev";
 
-    /**
-     * Asynchronously retrieves a value from the GA4 tag.
-     * @param {string} key - The value to get ('client_id' or 'session_id').
-     * @returns {Promise<string|null>} The requested value.
-     */
-    const getGaValue = (key) => {
-      return new Promise((resolve) => {
-        if (typeof gtag !== 'function') {
-          console.warn('gtag function not found.');
-          resolve(null);
-          return;
-        }
-        gtag('get', GA_MEASUREMENT_ID, key, (value) => resolve(value));
-      });
-    };
-
-    /**
-     * Finds all links pointing to the destination domain and decorates them
-     * with the current GA4 client and session IDs.
-     */
-    async function decorateLinksWithGaIds() {
-      try {
-        const [clientId, sessionId] = await Promise.all([
-          getGaValue('client_id'),
-          getGaValue('session_id')
-        ]);
-
-        if (!clientId || !sessionId) {
-          console.error('Could not retrieve GA4 client_id or session_id.');
-          return;
-        }
-
-        console.log(`Found IDs to pass: Client ID = ${clientId}, Session ID = ${sessionId}`);
-
-        // Find all anchor tags on the page
-        const allLinks = document.querySelectorAll('a');
-
-        allLinks.forEach(link => {
-          // Check if the link's href attribute contains the destination domain
-          if (link.href && link.href.includes(DESTINATION_DOMAIN)) {
-            const url = new URL(link.href);
-
-            // Add the captured IDs as query parameters
-            url.searchParams.set('ga_client_id', clientId);
-            url.searchParams.set('ga_session_id', sessionId);
-
-            // Update the link's href with the new URL
-            link.href = url.toString();
-            
-            console.log('Successfully decorated link:', link.href);
-          }
+      const getGaValue = (key) => {
+        return new Promise((resolve) => {
+          gtag('get', PARENT_GA_MEASUREMENT_ID, key, (value) => resolve(value));
         });
+      };
 
-      } catch (error) {
-        console.error('Error decorating links with GA4 IDs:', error);
+      async function sendGa4DataToIframe() {
+        try {
+          const [clientId, sessionId] = await Promise.all([
+            getGaValue('client_id'),
+            getGaValue('session_id')
+          ]);
+          const message = { type: 'ga4Data', clientId: clientId, sessionId: sessionId };
+          iframe.contentWindow.postMessage(message, targetOrigin);
+          console.log("🚀 GA4 data synced with iframe:", message);
+        } catch (error) {
+          console.error("Error syncing GA4 data:", error);
+        }
       }
-    }
 
-    // Run the decorator function once the page content has loaded.
-    document.addEventListener('DOMContentLoaded', decorateLinksWithGaIds);
-  </script>
+
+      iframe.addEventListener('load', sendGa4DataToIframe);
+      setInterval(sendGa4DataToIframe, 600000); 
+    </script>
   </div>
 
   <footer>
