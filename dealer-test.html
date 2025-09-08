@@ -79,33 +79,278 @@
     <!-- Embedded web app -->
     <iframe id="myIframe" src="https://srishti249.mykaarma.dev/web-scheduler-app/entry?dealerUuid=cb731d36fd635ddd6ef8dd43500892b0c0249d1c01a46dbcc445a809c0a8e3b2"></iframe>
         <script>
-      const PARENT_GA_MEASUREMENT_ID = 'G-SJZ0738NVZ'; 
-      const iframe = document.getElementById('myIframe');
-      const targetOrigin = "https://srishti249.mykaarma.dev";
+      // const PARENT_GA_MEASUREMENT_ID = 'G-SJZ0738NVZ'; 
+      // const iframe = document.getElementById('myIframe');
+      // const targetOrigin = "https://srishti249.mykaarma.dev";
 
-      const getGaValue = (key) => {
-        return new Promise((resolve) => {
-          gtag('get', PARENT_GA_MEASUREMENT_ID, key, (value) => resolve(value));
-        });
-      };
+      // const getGaValue = (key) => {
+      //   return new Promise((resolve) => {
+      //     gtag('get', PARENT_GA_MEASUREMENT_ID, key, (value) => resolve(value));
+      //   });
+      // };
 
-      async function sendGa4DataToIframe() {
-        try {
-          const [clientId, sessionId] = await Promise.all([
-            getGaValue('client_id'),
-            getGaValue('session_id')
-          ]);
-          const message = { type: 'ga4Data', clientId: clientId, sessionId: sessionId };
-          iframe.contentWindow.postMessage(message, targetOrigin);
-          console.log("🚀 GA4 data synced with iframe:", message);
-        } catch (error) {
-          console.error("Error syncing GA4 data:", error);
-        }
+      // async function sendGa4DataToIframe() {
+      //   try {
+      //     const [clientId, sessionId] = await Promise.all([
+      //       getGaValue('client_id'),
+      //       getGaValue('session_id')
+      //     ]);
+      //     const message = { type: 'ga4Data', clientId: clientId, sessionId: sessionId };
+      //     iframe.contentWindow.postMessage(message, targetOrigin);
+      //     console.log("🚀 GA4 data synced with iframe:", message);
+      //   } catch (error) {
+      //     console.error("Error syncing GA4 data:", error);
+      //   }
+      // }
+
+
+      // iframe.addEventListener('load', sendGa4DataToIframe);
+      // setInterval(sendGa4DataToIframe, 600000); 
+          @ -0,0 +1,244 @@
+// 🔧 UPDATED Parent Script - Actually Updates Iframe URL with Real GA4 Parameters
+// Replace your current <script> section with this code
+
+// --- Configuration ---
+const GA_MEASUREMENT_ID = 'G-SJZ0738NVZ';
+const DESTINATION_DOMAIN = 'srishti249.mykaarma.dev';
+const IFRAME_SELECTOR = '#myIframe';
+
+/**
+ * Get GA4 value with proper error handling
+ */
+const getGaValue = (key) => {
+  return new Promise((resolve) => {
+    if (typeof gtag !== 'function') {
+      console.warn(`❌ gtag not available for ${key}`);
+      resolve(null);
+      return;
+    }
+    
+    const timeout = setTimeout(() => {
+      console.warn(`⚠️ Timeout getting ${key} from GA4`);
+      resolve(null);
+    }, 5000);
+    
+    gtag('get', GA_MEASUREMENT_ID, key, (value) => {
+      clearTimeout(timeout);
+      console.log(`📊 Retrieved ${key}:`, value);
+      resolve(value);
+    });
+  });
+};
+
+/**
+ * 🎯 KEY FUNCTION: Update iframe src with real GA4 parameters
+ */
+async function updateIframeWithRealGA4Data() {
+  console.log('🚀 Starting iframe update with real GA4 data...');
+  
+  try {
+    // Step 1: Get real GA4 data from parent
+    console.log('🔍 Getting GA4 data from parent...');
+    const [clientId, sessionId] = await Promise.all([
+      getGaValue('client_id'),
+      getGaValue('session_id')
+    ]);
+
+    console.log('📊 GA4 Data Retrieved:');
+    console.log('  Client ID:', clientId);
+    console.log('  Session ID:', sessionId);
+
+    if (!clientId) {
+      throw new Error('No client_id available from GA4');
+    }
+
+    // Use current timestamp as session_id fallback if needed
+    const finalSessionId = sessionId || Math.floor(Date.now() / 1000).toString();
+
+    // Step 2: Get iframe element
+    const iframe = document.querySelector(IFRAME_SELECTOR);
+    if (!iframe) {
+      throw new Error(`Iframe not found: ${IFRAME_SELECTOR}`);
+    }
+
+    // Step 3: Get current iframe URL
+    const currentSrc = iframe.src;
+    console.log('📍 Current iframe src:', currentSrc);
+
+    // Step 4: Create new URL with GA4 parameters
+    const url = new URL(currentSrc);
+    url.searchParams.set('ga_client_id', clientId);
+    url.searchParams.set('ga_session_id', finalSessionId);
+
+    const newSrc = url.toString();
+    console.log('🔄 New iframe src:', newSrc);
+
+    // Step 5: 🔥 UPDATE THE IFRAME SRC - This is what was missing!
+    iframe.src = newSrc;
+
+    console.log('✅ SUCCESS: Iframe updated with real GA4 parameters!');
+    console.log('🎯 Parameters added:');
+    console.log(`   ga_client_id = ${clientId}`);
+    console.log(`   ga_session_id = ${finalSessionId}`);
+
+    // Also update any anchor links
+    updateLinksWithGA4Data(clientId, finalSessionId);
+
+  } catch (error) {
+    console.error('❌ Failed to update iframe with GA4 data:', error);
+    console.log('💡 Troubleshooting tips:');
+    console.log('   1. Check if GA4 is properly initialized');
+    console.log('   2. Verify iframe element exists');
+    console.log('   3. Make sure gtag function is available');
+    
+    // Try fallback approach
+    tryFallbackApproach();
+  }
+}
+
+/**
+ * Update anchor links with GA4 data (your original functionality)
+ */
+function updateLinksWithGA4Data(clientId, sessionId) {
+  console.log('🔗 Updating anchor links...');
+  
+  const links = document.querySelectorAll('a');
+  let updatedCount = 0;
+
+  links.forEach(link => {
+    if (link.href && link.href.includes(DESTINATION_DOMAIN)) {
+      try {
+        const url = new URL(link.href);
+        url.searchParams.set('ga_client_id', clientId);
+        url.searchParams.set('ga_session_id', sessionId);
+        link.href = url.toString();
+        updatedCount++;
+      } catch (error) {
+        console.warn('⚠️ Failed to update link:', link.href);
       }
+    }
+  });
 
+  console.log(`🎯 Updated ${updatedCount} anchor links`);
+}
 
-      iframe.addEventListener('load', sendGa4DataToIframe);
-      setInterval(sendGa4DataToIframe, 600000); 
+/**
+ * Fallback approach using GA cookie
+ */
+function tryFallbackApproach() {
+  console.log('🔄 Trying fallback approach...');
+  
+  // Try to get client ID from GA cookie
+  const gaCookie = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('_ga='));
+  
+  if (gaCookie) {
+    const parts = gaCookie.split('=')[1].split('.');
+    if (parts.length >= 4) {
+      const clientId = `${parts[2]}.${parts[3]}`;
+      const sessionId = Math.floor(Date.now() / 1000).toString();
+      
+      console.log('📊 Fallback GA data from cookie:');
+      console.log('  Client ID:', clientId);
+      console.log('  Session ID:', sessionId);
+      
+      updateIframeWithFallbackData(clientId, sessionId);
+      return;
+    }
+  }
+  
+  console.warn('⚠️ No fallback data available');
+}
+
+/**
+ * Update iframe with fallback data
+ */
+function updateIframeWithFallbackData(clientId, sessionId) {
+  const iframe = document.querySelector(IFRAME_SELECTOR);
+  if (iframe) {
+    const url = new URL(iframe.src);
+    url.searchParams.set('ga_client_id', clientId);
+    url.searchParams.set('ga_session_id', sessionId);
+    iframe.src = url.toString();
+    
+    console.log('✅ Iframe updated with fallback data');
+  }
+}
+
+/**
+ * Wait for GA4 to be ready
+ */
+function waitForGA4AndUpdate() {
+  console.log('⏳ Waiting for GA4 to initialize...');
+  
+  let attempts = 0;
+  const maxAttempts = 20; // 10 seconds max
+  
+  function checkGA4Ready() {
+    attempts++;
+    
+    if (typeof gtag === 'function') {
+      console.log('✅ GA4 gtag function is available');
+      
+      // Wait additional 2 seconds for GA4 to fully initialize
+      setTimeout(() => {
+        updateIframeWithRealGA4Data();
+      }, 2000);
+      
+    } else if (attempts < maxAttempts) {
+      console.log(`⏳ GA4 not ready yet (attempt ${attempts}/${maxAttempts}), retrying...`);
+      setTimeout(checkGA4Ready, 500);
+    } else {
+      console.warn('⚠️ GA4 failed to load after 10 seconds, trying fallback...');
+      tryFallbackApproach();
+    }
+  }
+  
+  checkGA4Ready();
+}
+
+// 🚀 Initialize when page loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', waitForGA4AndUpdate);
+} else {
+  // DOM already loaded
+  waitForGA4AndUpdate();
+}
+
+// 🧪 Expose debug functions for manual testing
+window.debugGA4 = {
+  // Manual iframe update
+  updateIframe: updateIframeWithRealGA4Data,
+  
+  // Test gtag availability and data
+  testGA4: async () => {
+    console.log('🧪 Testing GA4...');
+    console.log('gtag available:', typeof gtag);
+    
+    if (typeof gtag === 'function') {
+      const clientId = await getGaValue('client_id');
+      const sessionId = await getGaValue('session_id');
+      console.log('Test results:', {clientId, sessionId});
+    }
+  },
+  
+  // Check current iframe status
+  checkIframe: () => {
+    const iframe = document.querySelector(IFRAME_SELECTOR);
+    console.log('🔍 Iframe status:');
+    console.log('  Element found:', !!iframe);
+    console.log('  Current src:', iframe?.src);
+    
+    if (iframe?.src) {
+      const url = new URL(iframe.src);
+      console.log('  Has ga_client_id:', url.searchParams.has('ga_client_id'));
+      console.log('  Has ga_session_id:', url.searchParams.has('ga_session_id'));
+      console.log('  ga_client_id value:', url.searchParams.get('ga_client_id'));
+      console.log('  ga_session_id value:', url.searchParams.get('ga_session_id'));
+    }
+  },
+  
+  // Force fallback approach
+  forceFallback: tryFallbackApproach
+};
     </script>
   </div>
 
