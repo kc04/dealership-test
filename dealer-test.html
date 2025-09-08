@@ -77,36 +77,95 @@
     <p>Check out our special tool below to customize your dream car or explore services powered by AI!</p>
 
     <!-- Embedded web app -->
-    <iframe id="myIframe" src="https://srishti249.mykaarma.dev/web-scheduler-app/entry?dealerUuid=cb731d36fd635ddd6ef8dd43500892b0c0249d1c01a46dbcc445a809c0a8e3b2"></iframe>
+    <iframe id="myIframe"></iframe>
         <script>
-      const PARENT_GA_MEASUREMENT_ID = 'G-SJZ0738NVZ'; 
-      const iframe = document.getElementById('myIframe');
-      const targetOrigin = "https://srishti249.mykaarma.dev";
+      // const PARENT_GA_MEASUREMENT_ID = 'G-SJZ0738NVZ'; 
+      // const iframe = document.getElementById('myIframe');
+      // const targetOrigin = "https://srishti249.mykaarma.dev";
 
-      const getGaValue = (key) => {
-        return new Promise((resolve) => {
-          gtag('get', PARENT_GA_MEASUREMENT_ID, key, (value) => resolve(value));
-        });
-      };
+      // const getGaValue = (key) => {
+      //   return new Promise((resolve) => {
+      //     gtag('get', PARENT_GA_MEASUREMENT_ID, key, (value) => resolve(value));
+      //   });
+      // };
 
-      async function sendGa4DataToIframe() {
-        try {
-          const [clientId, sessionId] = await Promise.all([
-            getGaValue('client_id'),
-            getGaValue('session_id')
-          ]);
-          const message = { type: 'ga4Data', clientId: clientId, sessionId: sessionId };
-          iframe.contentWindow.postMessage(message, targetOrigin);
-          console.log("🚀 GA4 data synced with iframe:", message);
-        } catch (error) {
-          console.error("Error syncing GA4 data:", error);
-        }
-      }
+      // async function sendGa4DataToIframe() {
+      //   try {
+      //     const [clientId, sessionId] = await Promise.all([
+      //       getGaValue('client_id'),
+      //       getGaValue('session_id')
+      //     ]);
+      //     const message = { type: 'ga4Data', clientId: clientId, sessionId: sessionId };
+      //     iframe.contentWindow.postMessage(message, targetOrigin);
+      //     console.log("🚀 GA4 data synced with iframe:", message);
+      //   } catch (error) {
+      //     console.error("Error syncing GA4 data:", error);
+      //   }
+      // }
 
 
-      iframe.addEventListener('load', sendGa4DataToIframe);
-      setInterval(sendGa4DataToIframe, 600000); 
+      // iframe.addEventListener('load', sendGa4DataToIframe);
+      // setInterval(sendGa4DataToIframe, 600000); 
 
+          // --- NEW SCRIPT ---
+
+const PARENT_GA_MEASUREMENT_ID = 'G-SJZ0738NVZ';
+const iframe = document.getElementById('myIframe');
+// Define the base URL for the iframe without any query parameters
+const iframeBaseUrl = "https://srishti249.mykaarma.dev/web-scheduler-app/entry?dealerUuid=cb731d36fd635ddd6ef8dd43500892b0c0249d1c01a46dbcc445a809c0a8e3b2";
+
+/**
+ * Asynchronously retrieves a value from the GA4 tag.
+ * @param {string} key - The value to get ('client_id' or 'session_id').
+ * @returns {Promise<string|null>} The requested value.
+ */
+const getGaValue = (key) => {
+  return new Promise((resolve) => {
+    if (typeof gtag !== 'function') {
+      console.warn('gtag function not found.');
+      resolve(null);
+      return;
+    }
+    gtag('get', PARENT_GA_MEASUREMENT_ID, key, (value) => resolve(value));
+  });
+};
+
+/**
+ * Gets GA4 IDs, constructs the full iframe URL with them, and sets the iframe src.
+ */
+async function loadIframeWithGaIds() {
+  try {
+    const [clientId, sessionId] = await Promise.all([
+      getGaValue('client_id'),
+      getGaValue('session_id')
+    ]);
+
+    if (!clientId || !sessionId) {
+      console.error("Could not retrieve GA4 IDs. Loading iframe with original URL.");
+      iframe.src = iframeBaseUrl; // Fallback to the original URL
+      return;
+    }
+
+    // Create a URL object to easily add search parameters
+    const finalUrl = new URL(iframeBaseUrl);
+
+    // Add the captured IDs as query parameters
+    finalUrl.searchParams.set('ga_client_id', clientId);
+    finalUrl.searchParams.set('ga_session_id', sessionId);
+
+    console.log("🚀 Setting iframe src to decorated URL:", finalUrl.toString());
+
+    // Set the iframe's src attribute, causing it to load with the correct parameters
+    iframe.src = finalUrl.toString();
+
+  } catch (error) {
+    console.error("Error setting iframe src with GA4 data:", error);
+    iframe.src = iframeBaseUrl; // Fallback on error
+  }
+}
+
+// Run the function once the page content has fully loaded.
+document.addEventListener('DOMContentLoaded', loadIframeWithGaIds);
     </script>
   </div>
 
